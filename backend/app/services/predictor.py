@@ -1,10 +1,12 @@
 import pickle
 import os
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "..", "..", "model", "model.pkl")
+VECTORIZER_PATH = os.path.join(BASE_DIR, "..", "..", "model", "vectorizer.pkl")
 
-MODEL_PATH = os.path.join(BASE_DIR, "model", "model.pkl")
-VECTORIZER_PATH = os.path.join(BASE_DIR, "model", "vectorizer.pkl")
+model = pickle.load(open(MODEL_PATH, "rb"))
+vectorizer = pickle.load(open(VECTORIZER_PATH, "rb"))
 
 print("Model path:", MODEL_PATH)
 print("Vectorizer path:", VECTORIZER_PATH)
