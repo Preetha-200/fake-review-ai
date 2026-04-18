@@ -97,7 +97,7 @@ function generateReasons(fake, genuine) {
 
 // API call
 async function getPrediction(review) {
-  const res = await fetch("http://127.0.0.1:8000/predict", {
+  const res = await fetch("https://github.com/Preetha-200/fake-review-ai", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ review })
