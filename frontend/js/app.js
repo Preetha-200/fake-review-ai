@@ -98,7 +98,7 @@ function generateReasons(fake, genuine) {
 
 // API call
 async function getPrediction(review) {
-  const res = await fetch(`${API_URL}/predict`, {
+  const res = await fetch(`${API_URL}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ review })
