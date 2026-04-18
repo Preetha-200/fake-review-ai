@@ -185,7 +185,7 @@ async function analyze() {
           labels: ["Fake", "Genuine"],
           datasets: [{
             data: [fake, genuine],
-            backgroundColor: ["#ef4444", "#22c55e"],
+            backgroundColor: ["#B5D8A7", "#5FB08A"],
             borderWidth: 0
           }]
         },
@@ -342,3 +342,31 @@ function downloadCSV() {
 
   URL.revokeObjectURL(url);
 }
+
+/* =========================
+   FILE NAME DISPLAY (ADD HERE)
+========================= */
+
+window.addEventListener("DOMContentLoaded", () => {
+  const fileInput = document.getElementById("csvFile");
+  const fileBox = document.getElementById("fileBox");
+  const fileName = document.getElementById("fileName");
+  const removeBtn = document.getElementById("removeFile");
+
+  if (!fileInput) return;
+
+  // When file is selected
+  fileInput.addEventListener("change", function () {
+    if (this.files.length > 0) {
+      fileName.innerText = this.files[0].name;
+      fileBox.classList.remove("hidden"); // show box
+    }
+  });
+
+  // Remove file
+  removeBtn.addEventListener("click", () => {
+    fileInput.value = ""; // clear input
+    fileBox.classList.add("hidden"); // hide box
+    fileName.innerText = "";
+  });
+});
