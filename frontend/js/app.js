@@ -1,4 +1,3 @@
-const API_URL = "https://fake-review-ai-l79p.onrender.com";
 let chart = null;
 let csvData = [];
 
@@ -97,6 +96,8 @@ function generateReasons(fake, genuine) {
 }
 
 // API call
+const API_URL = "https://fake-review-ai-l79p.onrender.com";
+
 async function getPrediction(review) {
   const res = await fetch(`${API_URL}/predict`, {
     method: "POST",
@@ -104,7 +105,11 @@ async function getPrediction(review) {
     body: JSON.stringify({ review })
   });
 
-  if (!res.ok) throw new Error("API Error");
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("API ERROR:", text);
+    throw new Error("API Error");
+  }
 
   return res.json();
 }
