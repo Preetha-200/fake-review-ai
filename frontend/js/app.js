@@ -1,3 +1,4 @@
+const API_URL = "https://fake-review-ai-l79p.onrender.com/predict";
 let chart = null;
 let csvData = [];
 
@@ -97,7 +98,7 @@ function generateReasons(fake, genuine) {
 
 // API call
 async function getPrediction(review) {
-  const res = await fetch("https://github.com/Preetha-200/fake-review-ai", {
+  const res = await fetch(`${API_URL}/predict`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ review })
