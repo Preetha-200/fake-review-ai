@@ -12,214 +12,278 @@
 
   <!-- NAVBAR -->
   <nav class="flex justify-between px-10 py-6 border-b border-gray-800">
-    <a href="index.html"><h1 class="text-xl font-semibold">ReviewAI</h1></a>
-    <a href="index.html" class="text-gray-400 hover:text-white transition">Home</a>
+    <a href="index.html">
+      <h1 class="text-xl font-semibold">ReviewAI</h1>
+    </a>
+    <a href="index.html" class="text-gray-400 hover:text-white transition">
+      Home
+    </a>
   </nav>
 
-  <!-- MAIN GRID -->
-  <div class="grid grid-cols-12 gap-6 p-10">
+  <!-- MAIN LAYOUT -->
+  <div class="flex min-h-[calc(100vh-81px)]">
 
-    <!-- LEFT PANEL -->
-    <div class="col-span-4 bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-5">
+    <!-- SIDEBAR -->
+    <aside class="w-72 bg-gray-900 border-r border-gray-800 p-6">
+      <h2 class="text-2xl font-bold mb-8">Dashboard</h2>
 
-      <div>
-        <h2 class="text-xl mb-2">Analyze Review</h2>
-        <p class="text-sm text-gray-400">
-          Detect fake vs genuine reviews using AI.
-        </p>
-      </div>
-
-      <!-- TEXT INPUT -->
-      <textarea id="review"
-        class="w-full h-40 p-3 rounded bg-gray-800 border border-gray-700 outline-none focus:border-blue-500"
-        placeholder="Paste review here..."></textarea>
-
-      <!-- ANALYZE BUTTON -->
-      <div class="relative">
-        <button onclick="analyze()"
-          class="w-full py-3 bg-blue-600 rounded-lg hover:bg-blue-500 transition">
-          Analyze
+      <nav class="space-y-3">
+        <button
+          id="reviewTab"
+          onclick="showSection('review')"
+          class="w-full text-left px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 transition">
+          Analyze Review
         </button>
-        <div id="loader"
-          class="hidden absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
-          <div class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      </div>
 
-      <!-- HIGHLIGHTED TEXT -->
-      <div id="highlightedText"
-        class="p-4 bg-gray-800 rounded-lg text-sm text-gray-300 leading-relaxed">
-        Highlighted review will appear here...
-      </div>
-
-      <!-- CSV SECTION -->
-      <div class="pt-2 border-t border-gray-800">
-        <p class="text-sm text-gray-400 mb-2">Upload CSV</p>
-        <input type="file" id="csvFile"
-          accept=".csv"
-          class="hidden"/>
-
-        
-        
-        <div class="mt-4">
-          <label for="csvFile" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-0.5 cursor-pointer inline-block text-sm">
-            Choose File
-          </label>
-        </div>
-        <div id="fileBox"
-          class="hidden mt-3 p-3 bg-gray-900 border border-gray-700 rounded-lg flex justify-between items-center">
-          <span id="fileName" class="text-sm text-gray-300"></span>
-          <button id="removeFile"
-            class="text-gray-400 hover:text-gray-300 text-sm">
-            ✕
-          </button>
-        </div>
-
-        <button onclick="analyzeCSV()"
-          class="w-full mt-3 py-2 bg-purple-600 rounded-lg hover:bg-purple-500 transition">
+        <button
+          id="csvTab"
+          onclick="showSection('csv')"
+          class="w-full text-left px-4 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 transition">
           Analyze CSV
         </button>
-      </div>
+      </nav>
+    </aside>
 
-    </div>
+    <!-- CONTENT -->
+    <main class="flex-1 p-10">
 
-    <!-- RIGHT PANEL -->
-    <div class="col-span-8 space-y-6">
+      <div class="grid grid-cols-12 gap-6">
 
-      <!-- STATS -->
-      <div class="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-6">
-          <!-- GENUINE -->
-          <div>
+        <!-- LEFT PANEL -->
+        <div class="col-span-4 space-y-6">
+
+          <!-- REVIEW SECTION -->
+          <div id="reviewSection" class="space-y-6">
+            <div class="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-5">
+
+              <div>
+                <h2 class="text-xl mb-2">Analyze Review</h2>
+                <p class="text-sm text-gray-400">
+                  Detect fake vs genuine reviews using AI.
+                </p>
+              </div>
+
+              <textarea id="review"
+                class="w-full h-40 p-3 rounded bg-gray-800 border border-gray-700 outline-none focus:border-blue-500"
+                placeholder="Paste review here..."></textarea>
+
+              <div class="relative">
+                <button onclick="analyze()"
+                  class="w-full py-3 bg-blue-600 rounded-lg hover:bg-blue-500 transition">
+                  Analyze
+                </button>
+
+                <div id="loader"
+                  class="hidden absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+                  <div class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              </div>
+
+              <div id="highlightedText"
+                class="p-4 bg-gray-800 rounded-lg text-sm text-gray-300 leading-relaxed">
+                Highlighted review will appear here...
+              </div>
+            </div>
+          </div>
+
+          <!-- CSV SECTION -->
+          <div id="csvSection" class="hidden space-y-6">
+            <div class="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-5">
+
+              <div>
+                <h2 class="text-xl mb-2">Analyze CSV</h2>
+                <p class="text-sm text-gray-400">
+                  Upload a CSV file for bulk review analysis.
+                </p>
+              </div>
+
+              <input type="file"
+                id="csvFile"
+                accept=".csv"
+                class="hidden"/>
+
+              <label for="csvFile"
+                class="inline-block bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded-lg cursor-pointer transition">
+                Choose File
+              </label>
+
+              <div id="fileBox"
+                class="hidden p-3 bg-gray-800 border border-gray-700 rounded-lg flex justify-between items-center">
+                <span id="fileName" class="text-sm text-gray-300"></span>
+                <button id="removeFile"
+                  class="text-gray-400 hover:text-white">
+                  ✕
+                </button>
+              </div>
+
+              <button onclick="analyzeCSV()"
+                class="w-full py-3 bg-purple-600 rounded-lg hover:bg-purple-500 transition">
+                Analyze CSV
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="col-span-8 space-y-6">
+
+          <!-- STATS -->
+          <div class="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-6">
+
+            <div>
               <div class="flex justify-between text-sm mb-1">
-                  <span class="text-gray-400">Genuine</span>
-                  <span id="genuineText">0%</span>
+                <span class="text-gray-400">Genuine</span>
+                <span id="genuineText">0%</span>
               </div>
               <div class="w-full bg-[#1E293B] rounded-full h-3 overflow-hidden">
-                  <div id="genuineBar"
-                      class="h-3 rounded-full transition-all duration-700"
-                      style="width:0%; background: #5FB08A;">
-                  </div>
+                <div id="genuineBar"
+                  class="h-3 rounded-full transition-all duration-700"
+                  style="width:0%; background:#5FB08A;">
+                </div>
               </div>
-          </div>
-          <!-- FAKE -->
-          <div>
-              <div class="flex justify-between text-sm mb-1">
-                  <span class="text-gray-400">Fake</span>
-                  <span id="fakeText">0%</span>
-              </div>
-              <div class="w-full bg-[#1E293B] rounded-full h-3 overflow-hidden">
-                  <div id="fakeBar"
-                      class="h-3 rounded-full transition-all duration-700"
-                      style="width:0%; background: #B5D8A7;">
-                  </div>
-              </div>
-          </div>
-          <!-- CONFIDENCE -->
-          <div>
-              <div class="flex justify-between text-sm mb-1">
-                  <span class="text-gray-400">Confidence</span>
-                  <span id="confidenceText">0%</span>
-              </div>
-              <div class="w-full bg-[#1E293B] rounded-full h-3 overflow-hidden">
-                  <div id="confidenceBar"
-                      class="h-3 rounded-full transition-all duration-700"
-                      style="width:0%; background: #6EC5C3;">
-                  </div>
-              </div>
-          </div>
-      </div>
+            </div>
 
-      <!-- CHART -->
-      <div class="bg-[#111827] p-6 rounded-2xl border border-[#1E293B]
-      shadow-[0_10px_30px_rgba(0,0,0,0.4)]
-      flex flex-col items-center justify-center space-y-4">
-          <!-- Title -->
-          <div class="w-full flex justify-between items-center">
+            <div>
+              <div class="flex justify-between text-sm mb-1">
+                <span class="text-gray-400">Fake</span>
+                <span id="fakeText">0%</span>
+              </div>
+              <div class="w-full bg-[#1E293B] rounded-full h-3 overflow-hidden">
+                <div id="fakeBar"
+                  class="h-3 rounded-full transition-all duration-700"
+                  style="width:0%; background:#B5D8A7;">
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-sm mb-1">
+                <span class="text-gray-400">Confidence</span>
+                <span id="confidenceText">0%</span>
+              </div>
+              <div class="w-full bg-[#1E293B] rounded-full h-3 overflow-hidden">
+                <div id="confidenceBar"
+                  class="h-3 rounded-full transition-all duration-700"
+                  style="width:0%; background:#6EC5C3;">
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- CHART -->
+          <div class="bg-[#111827] p-6 rounded-2xl border border-[#1E293B] shadow-[0_10px_30px_rgba(0,0,0,0.4)] flex flex-col items-center justify-center space-y-4">
+            <div class="w-full flex justify-between items-center">
               <h3 class="text-sm font-semibold text-[#E2E8F0] tracking-wide">
-                  Analysis Overview
+                Analysis Overview
               </h3>
-              <span class="text-xs text-[#94A3B8]">
-                  Distribution
-              </span>
-          </div>
-          <!-- Chart Wrapper -->
-          <div class="relative w-44 h-44 flex items-center justify-center">
-              <!-- Chart -->
+              <span class="text-xs text-[#94A3B8]">Distribution</span>
+            </div>
+
+            <div class="relative w-44 h-44 flex items-center justify-center">
               <canvas id="chart"></canvas>
-              <!-- Center Label -->
+
               <div class="absolute text-center">
-                  <p id="centerLabel" class="text-lg font-semibold text-[#E2E8F0]">
-                      --
-                  </p>
-                  <p class="text-xs text-[#94A3B8]">
-                      Result
-                  </p>
+                <p id="centerLabel"
+                  class="text-lg font-semibold text-[#E2E8F0]">
+                  --
+                </p>
+                <p class="text-xs text-[#94A3B8]">Result</p>
               </div>
+            </div>
           </div>
 
-      </div>
+          <!-- PROGRESS -->
+          <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+            <p class="text-sm text-gray-400 mb-2">CSV Processing</p>
 
-      <!-- PROGRESS BAR -->
-      <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
-        <p class="text-sm text-gray-400 mb-2">CSV Processing</p>
+            <div class="w-full bg-gray-800 rounded-full h-3">
+              <div id="progressBar"
+                class="bg-blue-500 h-3 rounded-full transition-all"
+                style="width:0%"></div>
+            </div>
 
-        <div class="w-full bg-gray-800 rounded-full h-3">
-          <div id="progressBar"
-            class="bg-blue-500 h-3 rounded-full transition-all"
-            style="width: 0%"></div>
+            <p id="progressText"
+              class="text-xs text-gray-400 mt-2">
+              0 / 0 processed
+            </p>
+          </div>
+
+          <!-- CSV RESULTS -->
+          <div class="bg-gray-900 p-6 rounded-xl border border-gray-800">
+            <h3 class="text-lg mb-3">Bulk Analysis Results</h3>
+
+            <div class="overflow-auto max-h-80">
+              <table class="w-full text-sm text-left">
+                <thead class="text-gray-400 border-b border-gray-700">
+                  <tr>
+                    <th class="py-2">Review</th>
+                    <th>Fake %</th>
+                    <th>Genuine %</th>
+                  </tr>
+                </thead>
+                <tbody id="csvResults"></tbody>
+              </table>
+            </div>
+
+            <button onclick="downloadCSV()"
+              class="mt-4 px-4 py-2 bg-green-600 rounded-lg hover:bg-green-500 transition">
+              Download Results
+            </button>
+          </div>
+
+          <!-- INSIGHT -->
+          <div class="bg-gray-900 p-6 rounded-xl border border-gray-800">
+            <h3 class="text-lg mb-2">AI Insight</h3>
+            <p id="insight" class="text-gray-400">
+              Run analysis to see insights.
+            </p>
+          </div>
+
+          <!-- REASONS -->
+          <div class="bg-gray-900 p-6 rounded-xl border border-gray-800">
+            <h3 class="text-lg mb-3">Why this result?</h3>
+            <ul id="reasons"
+              class="text-gray-400 space-y-2 text-sm">
+              <li>• Analysis will appear here</li>
+            </ul>
+          </div>
+
         </div>
-
-        <p id="progressText" class="text-xs text-gray-400 mt-2">
-          0 / 0 processed
-        </p>
       </div>
-
-      <!-- CSV TABLE -->
-      <div class="bg-gray-900 p-6 rounded-xl border border-gray-800">
-        <h3 class="text-lg mb-3">Bulk Analysis Results</h3>
-
-        <div class="overflow-auto max-h-80">
-          <table class="w-full text-sm text-left">
-            <thead class="text-gray-400 border-b border-gray-700">
-              <tr>
-                <th class="py-2">Review</th>
-                <th>Fake %</th>
-                <th>Genuine %</th>
-              </tr>
-            </thead>
-            <tbody id="csvResults"></tbody>
-          </table>
-        </div>
-
-        <!-- DOWNLOAD BUTTON -->
-        <button onclick="downloadCSV()"
-          class="mt-4 px-4 py-2 bg-green-600 rounded-lg hover:bg-green-500 transition">
-          Download Results
-        </button>
-      </div>
-
-      <!-- INSIGHT -->
-      <div class="bg-gray-900 p-6 rounded-xl border border-gray-800">
-        <h3 class="text-lg mb-2">AI Insight</h3>
-        <p id="insight" class="text-gray-400">
-          Run analysis to see insights.
-        </p>
-      </div>
-
-      <!-- REASONS -->
-      <div class="bg-gray-900 p-6 rounded-xl border border-gray-800">
-        <h3 class="text-lg mb-3">Why this result?</h3>
-        <ul id="reasons" class="text-gray-400 space-y-2 text-sm">
-          <li>• Analysis will appear here</li>
-        </ul>
-      </div>
-
-    </div>
-
+    </main>
   </div>
 
-  <!-- FADE IN -->
   <script>
+    function showSection(section) {
+      const reviewSection = document.getElementById("reviewSection");
+      const csvSection = document.getElementById("csvSection");
+
+      const reviewTab = document.getElementById("reviewTab");
+      const csvTab = document.getElementById("csvTab");
+
+      if (section === "review") {
+        reviewSection.classList.remove("hidden");
+        csvSection.classList.add("hidden");
+
+        reviewTab.className =
+          "w-full text-left px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 transition";
+
+        csvTab.className =
+          "w-full text-left px-4 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 transition";
+      } else {
+        csvSection.classList.remove("hidden");
+        reviewSection.classList.add("hidden");
+
+        csvTab.className =
+          "w-full text-left px-4 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 transition";
+
+        reviewTab.className =
+          "w-full text-left px-4 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 transition";
+      }
+    }
+
     document.body.style.opacity = 0;
     window.onload = () => {
       document.body.style.transition = "opacity 0.5s ease";

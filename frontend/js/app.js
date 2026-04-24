@@ -370,3 +370,36 @@ window.addEventListener("DOMContentLoaded", () => {
     fileName.innerText = "";
   });
 });
+
+/* =========================
+   dashboard seperation
+========================= */
+
+
+function showSection(section) {
+  const reviewSection = document.getElementById("reviewSection");
+  const csvSection = document.getElementById("csvSection");
+
+  const reviewTab = document.getElementById("reviewTab");
+  const csvTab = document.getElementById("csvTab");
+
+  if (section === "review") {
+    reviewSection.classList.remove("hidden");
+    csvSection.classList.add("hidden");
+
+    reviewTab.className =
+      "tab-btn w-full text-left px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 transition";
+
+    csvTab.className =
+      "tab-btn w-full text-left px-4 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition";
+  } else {
+    csvSection.classList.remove("hidden");
+    reviewSection.classList.add("hidden");
+
+    csvTab.className =
+      "tab-btn w-full text-left px-4 py-3 rounded-lg bg-purple-600 hover:bg-purple-500 transition";
+
+    reviewTab.className =
+      "tab-btn w-full text-left px-4 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition";
+  }
+}
