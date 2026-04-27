@@ -117,6 +117,48 @@ async function getPrediction(review) {
   return res.json();
 }
 
+function updateChart(fake, genuine) {
+    const canvas = document.getElementById("chart");
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    // Destroy previous chart safely
+    if (chart instanceof Chart) {
+        chart.destroy();
+    }
+
+    chart = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+            labels: ["Fake", "Genuine"],
+            datasets: [{
+                data: [fake, genuine],
+                backgroundColor: [
+                    "#B5D8A7",
+                    "#5FB08A"
+                ],
+                borderWidth: 0,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "72%",
+            animation: {
+                animateRotate: true,
+                animateScale: true
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
 /* =========================
    SINGLE REVIEW ANALYSIS
 ========================= */
@@ -172,34 +214,7 @@ async function analyze() {
         }
 
         // CHART
-        const canvas = document.getElementById("chart");
-        if (canvas) {
-            const ctx = canvas.getContext("2d");
-
-            if (chart) chart.destroy();
-
-            chart = new Chart(ctx, {
-                type: "doughnut",
-                data: {
-                    labels: ["Fake", "Genuine"],
-                    datasets: [{
-                        data: [fake, genuine],
-                        backgroundColor: ["#B5D8A7", "#5FB08A"],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: "72%",
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-        }
+        updateChart(fake, genuine);
 
         // AI INSIGHT
         const insight =
@@ -241,8 +256,80 @@ async function analyze() {
     }
 }
 
+// ======================================
+// CSV MODE MANAGEMENT
+// ======================================
+
+let appendCSVMode = false;
+
+function resetCSVAnalysis() {
+    if (!appendCSVMode) {
+        resetCSVAnalysis();
+    }
+
+    const historyTable = document.getElementById("historyTable");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+
+    if (historyTable) historyTable.innerHTML = "";
+
+    if (progressBar) progressBar.style.width = "0%";
+
+    if (progressText) {
+        progressText.textContent = "0 / 0 processed";
+    }
+
+    totalAnalyses = 0;
+    totalFake = 0;
+    totalGenuine = 0;
+
+    document.getElementById("totalAnalyses").textContent = "0";
+    document.getElementById("totalFake").textContent = "0";
+    document.getElementById("totalGenuine").textContent = "0";
+}
+
+function enableAppendCSVButton() {
+    let button = document.getElementById("appendCSVBtn");
+
+    if (button) return;
+
+    const analyzeButton = document.querySelector(
+        '#csvSection button[onclick="analyzeCSV()"]'
+    );
+
+    button = document.createElement("button");
+    button.id = "appendCSVBtn";
+    button.textContent = "Add Another CSV";
+    button.className =
+        "w-full py-3 bg-emerald-600 rounded-lg hover:bg-emerald-500 transition mt-3";
+
+    button.onclick = () => {
+        appendCSVMode = true;
+        document.getElementById("csvFile").click();
+    };
+
+    analyzeButton.insertAdjacentElement("afterend", button);
+}
+
+document.getElementById("csvFile").addEventListener("change", () => {
+    const fileInput = document.getElementById("csvFile");
+    const fileBox = document.getElementById("fileBox");
+    const fileName = document.getElementById("fileName");
+
+    if (!fileInput.files.length) return;
+
+    fileName.textContent = fileInput.files[0].name;
+    fileBox.classList.remove("hidden");
+
+    // Auto-analyze when adding another CSV
+    if (appendCSVMode) {
+        analyzeCSV();
+    }
+});
+
+
 /* =========================
-   CSV ANALYSIS (FINAL)
+   CSV ANALYSIS
 ========================= */
 
 async function analyzeCSV() {
@@ -265,12 +352,13 @@ async function analyzeCSV() {
     const historyTable = document.getElementById("historyTable");
     const centerLabel = document.getElementById("centerLabel");
 
-    if (!fileInput || !fileInput.files.length) {
+    
+    if (!selectedCSVFiles.length) {
         alert("Upload a CSV file first.");
         return;
     }
 
-    const file = fileInput.files[0];
+    const file = selectedCSVFiles[0];
 
     csvData = [];
     progressBar.style.width = "0%";
@@ -380,8 +468,16 @@ async function analyzeCSV() {
 
             progressText.textContent =
                 `Completed: ${csvData.length} reviews processed`;
+
+            enableAppendCSVButton();
+            appendCSVMode = false;
+            fileInput.value = "";
         }
     });
+
+    enableAppendCSVButton();
+    appendCSVMode = false;
+    fileInput.value = "";
 }
 
 /* =========================
@@ -412,7 +508,7 @@ function downloadCSV() {
 }
 
 /* =========================
-   FILE NAME DISPLAY (ADD HERE)
+   FILE NAME DISPLAY
 ========================= */
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -448,11 +544,11 @@ function showSection(section) {
     const reviewSection = document.getElementById("reviewSection");
     const csvSection = document.getElementById("csvSection");
     const csvProgressSection = document.getElementById("csvProgressSection");
+    const chatSection = document.getElementById("chatSection");
 
     const reviewTab = document.getElementById("reviewTab");
     const csvTab = document.getElementById("csvTab");
 
-    // Single Review UI Sections
     const singleReviewSections = [
         document.querySelector("#highlightedText")?.closest(".bg-gray-900"),
         document.getElementById("insight")?.closest(".bg-gray-900"),
@@ -461,15 +557,26 @@ function showSection(section) {
     ];
 
     if (section === "review") {
-        reviewSection.classList.remove("hidden");
-        csvSection.classList.add("hidden");
-        csvProgressSection.classList.add("hidden");
+        // Main sections
+        reviewSection?.classList.remove("hidden");
+        csvSection?.classList.add("hidden");
+        csvProgressSection?.classList.add("hidden");
 
-        // Show single review components
+        // Force chat visible
+        if (chatSection) {
+            chatSection.classList.remove("hidden");
+            chatSection.style.display = "block";
+        }
+
+        // Show review-only cards
         singleReviewSections.forEach(el => {
-            if (el) el.classList.remove("hidden");
+            if (el) {
+                el.classList.remove("hidden");
+                el.style.display = "";
+            }
         });
 
+        // Tabs
         reviewTab.className =
             "px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 transition";
 
@@ -477,15 +584,26 @@ function showSection(section) {
             "px-5 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition";
 
     } else {
-        csvSection.classList.remove("hidden");
-        reviewSection.classList.add("hidden");
-        csvProgressSection.classList.remove("hidden");
+        // Main sections
+        csvSection?.classList.remove("hidden");
+        reviewSection?.classList.add("hidden");
+        csvProgressSection?.classList.remove("hidden");
 
-        // Hide single review components
+        // Hide chat in CSV mode
+        if (chatSection) {
+            chatSection.classList.add("hidden");
+            chatSection.style.display = "none";
+        }
+
+        // Hide review-only cards
         singleReviewSections.forEach(el => {
-            if (el) el.classList.add("hidden");
+            if (el) {
+                el.classList.add("hidden");
+                el.style.display = "none";
+            }
         });
 
+        // Tabs
         csvTab.className =
             "px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 transition";
 
@@ -544,4 +662,86 @@ function addToHistory(review, category, fake, genuine, confidence) {
     `;
 
     tbody.insertBefore(row, tbody.firstChild);
+}
+
+// ==========================================
+// CSV FILE SELECTION HANDLER
+// ==========================================
+
+
+let selectedCSVFiles = [];
+
+document.addEventListener("DOMContentLoaded", () => {
+    const csvInput = document.getElementById("csvFile");
+
+    if (!csvInput) return;
+
+    csvInput.addEventListener("change", function (e) {
+        const files = Array.from(e.target.files);
+
+        if (!files.length) return;
+
+        files.forEach(file => {
+            const exists = selectedCSVFiles.some(
+                existing =>
+                    existing.name === file.name &&
+                    existing.size === file.size
+            );
+
+            if (!exists) {
+                selectedCSVFiles.push(file);
+            }
+        });
+
+        renderSelectedCSVFiles();
+        this.value = "";
+    });
+
+    renderSelectedCSVFiles();
+});
+
+function renderSelectedCSVFiles() {
+    const container = document.getElementById("selectedFilesContainer");
+    const list = document.getElementById("selectedFilesList");
+
+    if (!container || !list) return;
+
+    // Always visible
+    container.classList.remove("hidden");
+
+    if (selectedCSVFiles.length === 0) {
+        list.innerHTML = `
+            <div class="text-center py-8 text-gray-400 border-2 border-dashed border-gray-700 rounded-xl">
+                <div class="text-3xl mb-2">📂</div>
+                <p>No CSV files selected yet</p>
+                <p class="text-xs mt-1 text-gray-500">
+                    Choose one or more CSV files to begin analysis
+                </p>
+            </div>
+        `;
+        return;
+    }
+
+    list.innerHTML = selectedCSVFiles.map((file, index) => `
+        <div class="flex items-center justify-between bg-gray-700 px-4 py-3 rounded-xl">
+            <div class="flex items-center gap-3 min-w-0">
+                <span class="text-purple-400 text-xl">📄</span>
+                <span class="text-sm text-gray-200 truncate">
+                    ${file.name}
+                </span>
+            </div>
+
+            <button
+                type="button"
+                onclick="removeCSVFile(${index})"
+                class="text-gray-400 hover:text-red-400 transition text-lg ml-3">
+                ✕
+            </button>
+        </div>
+    `).join("");
+}
+
+function removeCSVFile(index) {
+    selectedCSVFiles.splice(index, 1);
+    renderSelectedCSVFiles();
 }
