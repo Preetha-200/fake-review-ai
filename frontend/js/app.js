@@ -3,6 +3,8 @@ let csvData = [];
 let totalAnalyses = 0;
 let totalFake = 0;
 let totalGenuine = 0;
+console.log("Width: " + screen.width);
+console.log("Height: " + screen.height);
 
 /* =========================
    UTIL FUNCTIONS
@@ -578,10 +580,10 @@ function showSection(section) {
 
         // Tabs
         reviewTab.className =
-            "px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 transition";
+            "text-white hover:text-gray-400 transition";
 
         csvTab.className =
-            "px-5 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition";
+            "text-gray-400 hover:text-white transition";
 
     } else {
         // Main sections
@@ -605,10 +607,10 @@ function showSection(section) {
 
         // Tabs
         csvTab.className =
-            "px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 transition";
+            "text-white hover:text-gray-400 transition";
 
         reviewTab.className =
-            "px-5 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition";
+            "text-gray-400 hover:text-white transition";
     }
 }
 
