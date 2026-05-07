@@ -3,6 +3,8 @@ let csvData = [];
 let totalAnalyses = 0;
 let totalFake = 0;
 let totalGenuine = 0;
+let csvAnalysisDone = false;
+let csvState = "idle";
 console.log("Width: " + screen.width);
 console.log("Height: " + screen.height);
 
@@ -262,24 +264,44 @@ async function analyze() {
 // CSV MODE MANAGEMENT
 // ======================================
 
-let appendCSVMode = false;
+//FILE INPUT HANDLER
 
-function resetCSVAnalysis() {
-    if (!appendCSVMode) {
-        resetCSVAnalysis();
-    }
+document.getElementById("csvFile").addEventListener("change", (e) => {
+    const files = Array.from(e.target.files);
 
+    if (!files.length) return;
+
+    files.forEach(file => {
+        const exists = selectedCSVFiles.some(
+            existing =>
+                existing.name === file.name &&
+                existing.size === file.size
+        );
+
+        if (!exists) {
+            selectedCSVFiles.push(file);
+        }
+    });
+
+    csvState = "selected";
+
+    renderSelectedCSVFiles();
+    updateCSVLabel();
+});
+
+
+//RESET / NEW ANALYSIS
+
+function analyzeNewCSV() {
+    csvData = [];
+    csvAnalysisDone = false;
+    csvState = "idle";
+    document
+    .getElementById("newAnalysisBtn")
+    ?.classList.add("hidden");
+    updateCSVLabel();
     const historyTable = document.getElementById("historyTable");
-    const progressBar = document.getElementById("progressBar");
-    const progressText = document.getElementById("progressText");
-
     if (historyTable) historyTable.innerHTML = "";
-
-    if (progressBar) progressBar.style.width = "0%";
-
-    if (progressText) {
-        progressText.textContent = "0 / 0 processed";
-    }
 
     totalAnalyses = 0;
     totalFake = 0;
@@ -288,46 +310,39 @@ function resetCSVAnalysis() {
     document.getElementById("totalAnalyses").textContent = "0";
     document.getElementById("totalFake").textContent = "0";
     document.getElementById("totalGenuine").textContent = "0";
-}
 
-function enableAppendCSVButton() {
-    let button = document.getElementById("appendCSVBtn");
+    // reset progress UI
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
 
-    if (button) return;
+    if (progressBar) progressBar.style.width = "0%";
+    if (progressText) progressText.textContent = "0 / 0 processed";
 
-    const analyzeButton = document.querySelector(
-        '#csvSection button[onclick="analyzeCSV()"]'
-    );
+    // reset file selection state
+    selectedCSVFiles = [];
+    renderSelectedCSVFiles();
 
-    button = document.createElement("button");
-    button.id = "appendCSVBtn";
-    button.textContent = "Add Another CSV";
-    button.className =
-        "w-full py-3 bg-emerald-600 rounded-lg hover:bg-emerald-500 transition mt-3";
-
-    button.onclick = () => {
-        appendCSVMode = true;
-        document.getElementById("csvFile").click();
-    };
-
-    analyzeButton.insertAdjacentElement("afterend", button);
-}
-
-document.getElementById("csvFile").addEventListener("change", () => {
-    const fileInput = document.getElementById("csvFile");
-    const fileBox = document.getElementById("fileBox");
-    const fileName = document.getElementById("fileName");
-
-    if (!fileInput.files.length) return;
-
-    fileName.textContent = fileInput.files[0].name;
-    fileBox.classList.remove("hidden");
-
-    // Auto-analyze when adding another CSV
-    if (appendCSVMode) {
-        analyzeCSV();
+    // restore button text state if needed
+    const analyzeBtn = document.getElementById("analyzeCsvBtn");
+    if (analyzeBtn) {
+        analyzeBtn.innerText = "Analyze CSV";
+        analyzeBtn.onclick = analyzeCSV;
     }
-});
+}
+
+
+//REMOVE FILE
+
+function removeCSVFile(index) {
+    selectedCSVFiles.splice(index, 1);
+
+    if (selectedCSVFiles.length === 0) {
+        csvState = "idle";
+    }
+
+    renderSelectedCSVFiles();
+    updateCSVLabel();
+}
 
 
 /* =========================
@@ -335,7 +350,12 @@ document.getElementById("csvFile").addEventListener("change", () => {
 ========================= */
 
 async function analyzeCSV() {
-    // Hide single-review sections
+    csvAnalysisDone = true;
+    csvState = "done";
+    updateCSVLabel();
+    document
+    .getElementById("newAnalysisBtn")
+    ?.classList.remove("hidden");
     [
         "statsSection",
         "insightSection",
@@ -360,126 +380,155 @@ async function analyzeCSV() {
         return;
     }
 
-    const file = selectedCSVFiles[0];
-
     csvData = [];
-    progressBar.style.width = "0%";
-    progressText.textContent = "0 / 0 processed";
 
-    Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
+progressBar.style.width = "0%";
+progressText.textContent = "0 / 0 processed";
 
-        complete: async function(results) {
-            const rows = results.data;
+let processedFiles = 0;
+let totalFiles = selectedCSVFiles.length;
 
-            if (!rows.length) {
-                alert("CSV file is empty.");
-                return;
-            }
+for (const file of selectedCSVFiles) {
 
-            let reviewKey = Object.keys(rows[0]).find(key => {
-                const cleaned = key
-                    .replace(/^\uFEFF/, "")
-                    .trim()
-                    .toLowerCase();
+    await new Promise((resolve) => {
 
-                return cleaned.includes("review") ||
-                       cleaned.includes("text");
-            });
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
 
-            if (!reviewKey) {
-                reviewKey = Object.keys(rows[0])[0];
-            }
+            complete: async function(results) {
 
-            const total = rows.length;
+                const rows = results.data;
 
-            for (let i = 0; i < total; i++) {
-                const review = rows[i][reviewKey]?.trim();
-                if (!review) continue;
-
-                try {
-                    const result = await getPrediction(review);
-
-                    const fake = Math.round(result.fake_percentage);
-                    const genuine = Math.round(result.genuine_percentage);
-                    const confidence = Math.round(result.confidence);
-
-                    csvData.push({
-                        review,
-                        fake,
-                        genuine,
-                        confidence
-                    });
-
-                    // Update counters
-                    totalAnalyses++;
-                    if (fake > genuine) {
-                        totalFake++;
-                    } else {
-                        totalGenuine++;
-                    }
-
-                    document.getElementById("totalAnalyses").textContent = totalAnalyses;
-                    document.getElementById("totalFake").textContent = totalFake;
-                    document.getElementById("totalGenuine").textContent = totalGenuine;
-
-                    // Add history row
-                    const badge = fake > genuine
-                        ? `<span class="px-2 py-1 rounded-full text-xs font-semibold text-red-400 bg-red-500/10">FAKE</span>`
-                        : `<span class="px-2 py-1 rounded-full text-xs font-semibold text-green-400 bg-green-500/10">GENUINE</span>`;
-
-                    const time = new Date().toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit"
-                    });
-
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td class="py-4 px-3 max-w-xs truncate">${review}</td>
-                        <td class="px-3">csv-upload</td>
-                        <td class="px-3">${badge}</td>
-                        <td class="px-3">${fake}%</td>
-                        <td class="px-3">${genuine}%</td>
-                        <td class="px-3">${confidence}%</td>
-                        <td class="px-3 text-gray-400">${time}</td>
-                    `;
-
-                    historyTable.insertBefore(row, historyTable.firstChild);
-
-                    // Update chart only
-                    if (typeof updateChart === "function") {
-                        updateChart(fake, genuine);
-                    }
-
-                    if (centerLabel) {
-                        centerLabel.textContent =
-                            fake > genuine ? "Fake" : "Genuine";
-                    }
-
-                    // Update progress
-                    const progress = Math.round(((i + 1) / total) * 100);
-                    progressBar.style.width = progress + "%";
-                    progressText.textContent =
-                        `${i + 1} / ${total} processed`;
-
-                } catch (error) {
-                    console.error(`Row ${i + 1} failed:`, error);
+                if (!rows.length) {
+                    resolve();
+                    return;
                 }
+
+                let reviewKey = Object.keys(rows[0]).find(key => {
+                    const cleaned = key
+                        .replace(/^\uFEFF/, "")
+                        .trim()
+                        .toLowerCase();
+
+                    return cleaned.includes("review") ||
+                           cleaned.includes("text");
+                });
+
+                if (!reviewKey) {
+                    reviewKey = Object.keys(rows[0])[0];
+                }
+
+                const total = rows.length;
+
+                for (let i = 0; i < total; i++) {
+
+                    const review = rows[i][reviewKey]?.trim();
+
+                    if (!review) continue;
+
+                    try {
+
+                        const result = await getPrediction(review);
+
+                        const fake = Math.round(result.fake_percentage);
+                        const genuine = Math.round(result.genuine_percentage);
+                        const confidence = Math.round(result.confidence);
+
+                        csvData.push({
+                            review,
+                            fake,
+                            genuine,
+                            confidence
+                        });
+
+                        totalAnalyses++;
+
+                        if (fake > genuine) {
+                            totalFake++;
+                        } else {
+                            totalGenuine++;
+                        }
+
+                        document.getElementById("totalAnalyses").textContent = totalAnalyses;
+                        document.getElementById("totalFake").textContent = totalFake;
+                        document.getElementById("totalGenuine").textContent = totalGenuine;
+
+                        const badge = fake > genuine
+                            ? `<span class="px-2 py-1 rounded-full text-xs font-semibold text-red-400 bg-red-500/10">FAKE</span>`
+                            : `<span class="px-2 py-1 rounded-full text-xs font-semibold text-green-400 bg-green-500/10">GENUINE</span>`;
+
+                        const time = new Date().toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        });
+
+                        const row = document.createElement("tr");
+
+                        row.innerHTML = `
+                            <td class="py-4 px-3 max-w-xs truncate">${review}</td>
+                            <td class="px-3">${file.name}</td>
+                            <td class="px-3">${badge}</td>
+                            <td class="px-3">${fake}%</td>
+                            <td class="px-3">${genuine}%</td>
+                            <td class="px-3">${confidence}%</td>
+                            <td class="px-3 text-gray-400">${time}</td>
+                        `;
+
+                        historyTable.insertBefore(row, historyTable.firstChild);
+
+                        updateChart(fake, genuine);
+
+                        if (centerLabel) {
+                            centerLabel.textContent =
+                                fake > genuine ? "Fake" : "Genuine";
+                        }
+
+                        const overallProgress = Math.round(
+                            (
+                                (
+                                    processedFiles +
+                                    ((i + 1) / total)
+                                ) / totalFiles
+                            ) * 100
+                        );
+
+                        progressBar.style.width =
+                            overallProgress + "%";
+
+                        progressText.textContent =
+                            `${processedFiles + 1} / ${totalFiles} files`;
+
+                    } catch (error) {
+                        console.error(error);
+                    }
+                }
+
+                processedFiles++;
+
+                resolve();
             }
+        });
 
-            progressText.textContent =
-                `Completed: ${csvData.length} reviews processed`;
-
-            enableAppendCSVButton();
-            appendCSVMode = false;
-            fileInput.value = "";
-        }
     });
+    
 
-    enableAppendCSVButton();
-    appendCSVMode = false;
-    fileInput.value = "";
+}
+
+progressText.textContent =
+    `Completed: ${csvData.length} reviews processed`;
+
+fileInput.value = "";
+
+const analyzeBtn =
+    document.getElementById("analyzeCsvBtn");
+
+if (analyzeBtn) {
+
+    analyzeBtn.innerText = "Analyze New CSV";
+
+    analyzeBtn.onclick = analyzeNewCSV;
+}
 }
 
 /* =========================
@@ -510,34 +559,6 @@ function downloadCSV() {
 }
 
 /* =========================
-   FILE NAME DISPLAY
-========================= */
-
-window.addEventListener("DOMContentLoaded", () => {
-  const fileInput = document.getElementById("csvFile");
-  const fileBox = document.getElementById("fileBox");
-  const fileName = document.getElementById("fileName");
-  const removeBtn = document.getElementById("removeFile");
-
-  if (!fileInput) return;
-
-  // When file is selected
-  fileInput.addEventListener("change", function () {
-    if (this.files.length > 0) {
-      fileName.innerText = this.files[0].name;
-      fileBox.classList.remove("hidden"); // show box
-    }
-  });
-
-  // Remove file
-  removeBtn.addEventListener("click", () => {
-    fileInput.value = ""; // clear input
-    fileBox.classList.add("hidden"); // hide box
-    fileName.innerText = "";
-  });
-});
-
-/* =========================
    dashboard seperation
 ========================= */
 
@@ -552,11 +573,11 @@ function showSection(section) {
     const csvTab = document.getElementById("csvTab");
 
     const singleReviewSections = [
-        document.querySelector("#highlightedText")?.closest(".bg-gray-900"),
-        document.getElementById("insight")?.closest(".bg-gray-900"),
-        document.getElementById("reasons")?.closest(".bg-gray-900"),
+        document.querySelector("#highlightedText")?.parentElement,
+        document.getElementById("insight")?.parentElement,
+        document.getElementById("reasons")?.parentElement,
         document.getElementById("genuineBar")?.closest(".bg-gray-900")
-    ];
+    ].filter(Boolean);
 
     if (section === "review") {
         // Main sections
@@ -573,8 +594,7 @@ function showSection(section) {
         // Show review-only cards
         singleReviewSections.forEach(el => {
             if (el) {
-                el.classList.remove("hidden");
-                el.style.display = "";
+                el.classList.toggle("hidden", section !== "review");
             }
         });
 
@@ -600,8 +620,7 @@ function showSection(section) {
         // Hide review-only cards
         singleReviewSections.forEach(el => {
             if (el) {
-                el.classList.add("hidden");
-                el.style.display = "none";
+                el.classList.toggle("hidden", section !== "review");
             }
         });
 
@@ -673,32 +692,7 @@ function addToHistory(review, category, fake, genuine, confidence) {
 
 let selectedCSVFiles = [];
 
-document.addEventListener("DOMContentLoaded", () => {
-    const csvInput = document.getElementById("csvFile");
-
-    if (!csvInput) return;
-
-    csvInput.addEventListener("change", function (e) {
-        const files = Array.from(e.target.files);
-
-        if (!files.length) return;
-
-        files.forEach(file => {
-            const exists = selectedCSVFiles.some(
-                existing =>
-                    existing.name === file.name &&
-                    existing.size === file.size
-            );
-
-            if (!exists) {
-                selectedCSVFiles.push(file);
-            }
-        });
-
-        renderSelectedCSVFiles();
-        this.value = "";
-    });
-
+window.addEventListener("DOMContentLoaded", () => {
     renderSelectedCSVFiles();
 });
 
@@ -706,10 +700,11 @@ function renderSelectedCSVFiles() {
     const container = document.getElementById("selectedFilesContainer");
     const list = document.getElementById("selectedFilesList");
 
-    if (!container || !list) return;
+    if (!container || !list) {
+        return
+    };
 
-    // Always visible
-    container.classList.remove("hidden");
+    container.style.display = "block";
 
     if (selectedCSVFiles.length === 0) {
         list.innerHTML = `
@@ -721,6 +716,7 @@ function renderSelectedCSVFiles() {
                 </p>
             </div>
         `;
+        updateCSVLabel();
         return;
     }
 
@@ -743,7 +739,15 @@ function renderSelectedCSVFiles() {
     `).join("");
 }
 
-function removeCSVFile(index) {
-    selectedCSVFiles.splice(index, 1);
-    renderSelectedCSVFiles();
+function updateCSVLabel() {
+    const label = document.getElementById("csvUploadLabel");
+    if (!label) return;
+
+    if (csvState === "idle") {
+        label.innerText = "Choose CSV";
+    } else if (csvState === "selected") {
+        label.innerText = "Choose Another CSV";
+    } else if (csvState === "done") {
+        label.innerText = "Choose Another CSV";
+    }
 }

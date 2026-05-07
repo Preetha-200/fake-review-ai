@@ -37,7 +37,7 @@
     <main class="p-10">
         <div class="grid grid-cols-12 gap-6">
             <!-- LEFT PANEL -->
-            <div class="col-span-4 space-y-6">
+            <div class="col-span-4 space-y-6 h-screen overflow-y-auto pr-2">
                 <!-- REVIEW SECTION -->
                 <div id="reviewSection">
                   <div class="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-5">
@@ -100,63 +100,39 @@
                                 Upload one or more CSV files for bulk analysis.
                             </p>
                         </div>
-                        <!-- Hidden File Input -->
-                        <input
-                            type="file"
-                            id="csvFile"
-                            accept=".csv"
-                            multiple
-                            class="hidden">
-                        <!-- Upload Button -->
-                        <label
-                            id="csvUploadLabel"
-                            for="csvFile"
-                            class="inline-flex items-center justify-center bg-purple-600 hover:bg-purple-500 px-5 py-3 rounded-xl cursor-pointer transition font-medium">
-                            Choose CSV File
-                        </label>
-                        <!-- Selected Files Display -->
+                    <label
+                        id="csvUploadLabel"
+                        for="csvFile"
+                        id="csvUploadLabel" class="inline-flex items-center justify-center text-sm px-4 py-2 border-gray-700 cursor-pointer bg-black/80 rounded-lg">
+                        Choose CSV File
+                    </label>
+                    <input
+                        type="file"
+                        id="csvFile"
+                        accept=".csv"
+                        multiple
+                        class="hidden">
+                    <div id="selectedFilesContainer"
+                        class="mt-4 max-h-52 overflow-y-auto space-y-3">
+
                         <div
-                            id="selectedFilesContainer"
-                            class="hidden bg-gray-800 border border-gray-700 rounded-xl p-4 space-y-3">
-
-                            <p class="text-sm font-medium text-gray-300">
-                                Selected Files
-                            </p>
-
-                            <div
-                                id="selectedFilesList"
-                                class="space-y-2 max-h-48 overflow-y-auto">
-                            </div>
+                            id="selectedFilesList"
+                            class="space-y-3">
                         </div>
-
-                        <!-- Analyze Button -->
+                    </div>
                         <button
                             id="analyzeCsvBtn"
                             onclick="analyzeCSV()"
                             class="w-full py-3 bg-purple-600 rounded-xl hover:bg-purple-500 transition font-medium">
                             Analyze CSV
                         </button>
+                        <button
+                            id="newAnalysisBtn"
+                            onclick="analyzeNewCSV()"
+                            class="hidden w-full py-3 mt-3 bg-gray-200 text-black rounded-xl hover:bg-gray-700 transition font-medium">
 
-                        <!-- Post Analysis Buttons -->
-                        <div
-                            id="csvActionButtons"
-                            class="hidden grid grid-cols-2 gap-4">
-
-                            <button
-                                id="continueCsvBtn"
-                                onclick="continueCSVAnalysis()"
-                                class="py-3 bg-blue-600 hover:bg-blue-500 rounded-xl transition font-medium">
-                                Continue Analysis
-                            </button>
-
-                            <button
-                                id="newCsvBtn"
-                                onclick="startNewCSVAnalysis()"
-                                class="py-3 bg-gray-700 hover:bg-gray-600 rounded-xl transition font-medium">
-                                New Analysis
-                            </button>
-                        </div>
-
+                            New Analysis
+                        </button>
                     </div>
                 </div>
 
@@ -318,42 +294,6 @@
             </div>
         </div>
     </main>
-
-    <script>
-        function showSection(section) {
-            const reviewSection = document.getElementById('reviewSection');
-            const csvSection = document.getElementById('csvSection');
-            const reviewTab = document.getElementById('reviewTab');
-            const csvTab = document.getElementById('csvTab');
-
-            if (section === 'review') {
-                reviewSection.classList.remove('hidden');
-                csvSection.classList.add('hidden');
-
-                reviewTab.className =
-                    'px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 transition';
-
-                csvTab.className =
-                    'px-5 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition';
-            } else {
-                csvSection.classList.remove('hidden');
-                reviewSection.classList.add('hidden');
-
-                csvTab.className =
-                    'px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 transition';
-
-                reviewTab.className =
-                    'px-5 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition';
-            }
-        }
-
-        document.body.style.opacity = 0;
-        window.onload = () => {
-            document.body.style.transition = "opacity 0.5s ease";
-            document.body.style.opacity = 1;
-        };
-    </script>
-
     <script src="js/app.js"></script>
 
 </body>
